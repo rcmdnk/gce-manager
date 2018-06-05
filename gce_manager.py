@@ -54,19 +54,19 @@ class Output(object):
 
     def debug(self, text, verbose=3):
         """Debug level output"""
-        self.output("[DEBUG]" + text, verbose)
+        self.output("[DEBUG] " + text, verbose)
 
     def info(self, text, verbose=2):
         """Information level output"""
-        self.output("[INFO]" + text, verbose)
+        self.output("[INFO] " + text, verbose)
 
     def warn(self, text, verbose=1):
         """Warning level output"""
-        self.output("[WARNING]" + text, verbose)
+        self.output("[WARNING] " + text, verbose)
 
     def err(self, text, verbose=0):
         """Error level output"""
-        self.output("[ERROR]" + text, verbose)
+        self.output("[ERROR] " + text, verbose)
 
 
 class GceManager(object):
@@ -293,7 +293,7 @@ class GceManager(object):
                 if command is not None:
                     self.err("More than two commands are given: " +
                              command + ", " + a)
-                    sys.exit(20)
+                    return 20
                 command = a
         if command is not None:
             argv.remove(command)
@@ -303,7 +303,7 @@ class GceManager(object):
 
         if args.help or args.command == "help" or args.command is None:
             parser.print_help()
-            sys.exit()
+            return 0
         self.set_params(vars(args))
 
         need_service_account_file = ["instances", "zones", "zones_instances",
@@ -317,18 +317,18 @@ class GceManager(object):
         if self.params["command"] in need_service_account_file and\
                 self.params["service_account_file"] == "":
             self.err("Please set account service file")
-            sys.exit(10)
+            return 10
         if self.params["command"] in need_project and\
                 self.params["project"] == "":
             self.err("Please set project ID")
-            sys.exit(11)
+            return 11
         if self.params["command"] in need_zone and self.params["zone"] == "":
             self.err("Please set zone")
-            sys.exit(12)
+            return 12
         if self.params["command"] in need_instance and\
                 self.params["instance"] == "":
             self.err("Please set instance")
-            sys.exit(13)
+            return 13
 
         compute = self.build_compute()
 
@@ -348,7 +348,9 @@ class GceManager(object):
         elif self.params["command"] == "get":
             self.print_instance(compute, self.params["project"],
                                 self.params["zone"], self.params["instance"])
+        return 0
 
 if __name__ == "__main__":
     gm = GceManager()
-    gm.execute()
+    ret = gm.execute()
+    sys.exit(ret)
