@@ -108,7 +108,7 @@ class GceManager(object):
         self.output.set_verbose(self.params["verbose"])
 
     def read_config(self):
-        """Read configuration file."""
+        """Read configuration file"""
         if os.path.isfile(self.params["config_file"]):
             params = {}
             with open(self.params["config_file"]) as conf_file:
@@ -229,7 +229,7 @@ class GceManager(object):
         print(json.dumps(result, indent=4, separators=(",", ": ")))
 
     def execute(self, argv=None):
-        """Main function."""
+        """Main function"""
 
         self.read_config()
 
