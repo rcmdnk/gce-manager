@@ -128,7 +128,9 @@ class GceManager(object):
     def build_compute(self):
         """Auth and Build"""
         credentials = service_account.Credentials.from_service_account_file(
-            self.params["service_account_file"], scopes=self.params["scopes"])
+            self.params["service_account_file"].replace("~",
+                                                        os.environ["HOME"]),
+            scopes=self.params["scopes"])
         return build("compute", "v1", credentials=credentials)
 
     def get_zones(self, compute, project):
