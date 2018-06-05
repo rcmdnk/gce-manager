@@ -123,7 +123,7 @@ class GceManager(object):
                         continue
                     (k, v) = line.split("=")
                     params[k.strip()] = v.strip()
-        self.set_params(params)
+            self.set_params(params)
 
     def build_compute(self):
         """Auth and Build"""
