@@ -85,6 +85,15 @@ class GceManager(object):
         }
         self.output = Output(self.params["verbose"])
 
+        """
+        resources = [x for x in dir(compute) if not x.startswith("_")]
+        r_list = {}
+        for resource in resources:
+            r_list[resource] = [
+                x for x in eval("dir(compute." + resource + "())")
+                if not x.startswith("_") and x != "list_next"]]
+        """
+
     def debug(self, text, verbose=3):
         """Debug level output wrapper"""
         self.output.debug(text, verbose)
@@ -133,7 +142,8 @@ class GceManager(object):
             scopes=self.params["scopes"])
         return build("compute", "v1", credentials=credentials)
 
-    def get_zones(self, compute, project):
+    @staticmethod
+    def get_zones(compute, project):
         """Make zone list"""
         return compute.zones().list(project=project).execute()
 
@@ -174,7 +184,8 @@ class GceManager(object):
             for i in v:
                 print("  " + i)
 
-    def get_instances(self, compute, project, zone):
+    @staticmethod
+    def get_instances(compute, project, zone):
         """Make instance list"""
         return compute.instances().list(project=project, zone=zone).execute()
 
@@ -191,7 +202,8 @@ class GceManager(object):
             for instance in instances["items"]:
                 print(instance["name"] + ": " + instance["status"])
 
-    def get_instance(self, compute, project, zone, instance):
+    @staticmethod
+    def get_instance(compute, project, zone, instance):
         """Get each instance information"""
         result = compute.instances().get(project=project, zone=zone,
                                          instance=instance).execute()
@@ -204,24 +216,27 @@ class GceManager(object):
         if self.params["verbose"] > 2:
             print(json.dumps(myinstance, indent=4, separators=(",", ": ")))
         else:
-            ip = ""
+            address = ""
             if "networkInterfaces" in myinstance:
-                ni = myinstance["networkInterfaces"][0]
-                if "accessConfigs" in ni:
-                    ac = ni["accessConfigs"][0]
-                    if "natIP" in ac:
-                        ip = ", IP: " + ac["natIP"]
+                network_interfaces = myinstance["networkInterfaces"][0]
+                if "accessConfigs" in network_interfaces:
+                    access_configs = network_interfaces["accessConfigs"][0]
+                    if "natIP" in access_configs:
+                        address = ", IP: " + access_configs["natIP"]
 
-            print(myinstance["name"] + ", Status:" + myinstance["status"] + ip)
+            print(myinstance["name"] + ", Status:" + myinstance["status"] +
+                  address)
 
-    def start(self, compute, project, zone, instance):
+    @staticmethod
+    def start(compute, project, zone, instance):
         """Start instance"""
         import json
         result = compute.instances().start(project=project, zone=zone,
                                            instance=instance).execute()
         print(json.dumps(result, indent=4, separators=(",", ": ")))
 
-    def stop(self, compute, project, zone, instance):
+    @staticmethod
+    def stop(compute, project, zone, instance):
         """Stop instance"""
         import json
         result = compute.instances().stop(project=project, zone=zone,
@@ -290,13 +305,13 @@ class GceManager(object):
         if argv is None:
             argv = sys.argv[1:]
         command = None
-        for a in argv:
-            if a in subparsers.choices:
+        for arg in argv:
+            if arg in subparsers.choices:
                 if command is not None:
                     self.err("More than two commands are given: " +
-                             command + ", " + a)
+                             command + ", " + arg)
                     return 20
-                command = a
+                command = arg
         if command is not None:
             argv.remove(command)
             argv.append(command)
@@ -314,7 +329,6 @@ class GceManager(object):
                         "start", "stop", "get"]
         need_zone = ["instances", "start", "stop", "get"]
         need_instance = ["start", "stop", "get"]
-
 
         if self.params["command"] in need_service_account_file and\
                 self.params["service_account_file"] == "":
@@ -352,7 +366,11 @@ class GceManager(object):
                                 self.params["zone"], self.params["instance"])
         return 0
 
-if __name__ == "__main__":
-    gm = GceManager()
-    ret = gm.execute()
+def main():
+    """main function"""
+    gce_manager = GceManager()
+    ret = gce_manager.execute()
     sys.exit(ret)
+
+if __name__ == "__main__":
+    main()
